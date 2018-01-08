@@ -9,10 +9,13 @@ class AnchorBehaviorStrategy(
 ) : ObservableScrollView.ObservableScrollViewCallbacks {
 
     override fun onScrollChanged(observableScrollView: ObservableScrollView, deltaY: Int) {
-
         val topOffset = calculateScrollViewTop(observableScrollView)
 
+        anchor.pivotX = anchor.width / 2.0f
+        anchor.pivotY = anchor.height / 2.0f
         anchor.translationY = calculateVerticalTranslation(topOffset).toFloat()
+        anchor.scaleX = calculateScale()
+        anchor.scaleY = calculateScale()
     }
 
     private fun calculateVerticalTranslation(topOffset: Int): Int = when {
@@ -26,6 +29,22 @@ class AnchorBehaviorStrategy(
                 0
             }
             placeHolderYPositionOnScreen - topOffset - delta
+        }
+    }
+
+    private fun calculateScale(): Float = when {
+        isPlaceHolderBelowScrollViewport() -> 1.0f
+        isPlaceHolderAboveScrollViewport() -> 1.0f
+        else -> {
+            val bottomLocation = screenHeight - anchor.height
+            val delta = if (placeHolderYPositionOnScreen > bottomLocation) {
+                placeHolderYPositionOnScreen - bottomLocation
+            } else {
+                0
+            }
+
+            val scale = delta.toFloat() / anchor.height
+            if (scale < 0.95f) 0.95f else scale
         }
     }
 
